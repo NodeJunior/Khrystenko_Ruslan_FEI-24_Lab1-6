@@ -17,6 +17,8 @@
 <button id="randomizeButton">Fill By Random</button>
 <p id="generationCounter">Generation: 0</p>
 <p id="liveCellsCounter">Live Cells: 0</p>
+<p id="bestGenerations">Best Generations: </p>
+<p id="worstGenerations">Worst Generations: </p>
 
 <script>
     const canvas = document.getElementById('gameCanvas');
@@ -28,6 +30,9 @@
     let generation = 0;
     let liveCells = 0;
     let prevGrids = [];
+    let bestGenerations = [];
+    let worstGenerations = [];
+
     let isMouseDown = false;
 
     let grid = createGrid();
@@ -82,6 +87,11 @@
 
         // Оновлення сітки
         grid = nextGen; 
+
+        bestGenerations.push(liveCells);
+        worstGenerations.push(liveCells);
+
+        worstGenerations = [...new Set(worstGenerations)];
     }
 
     function render() {
@@ -104,8 +114,17 @@
         render();
         document.getElementById('generationCounter').textContent = `Generation: ${generation}`;
         document.getElementById('liveCellsCounter').textContent = `Live Cells: ${liveCells}`;
+
         if (isGameRunning) {
             requestAnimationFrame(runGame);
+        }
+        else {
+            bestGenerations.sort((a, b) => b - a);
+            worstGenerations.sort((a, b) => a - b);
+            const best = bestGenerations.slice(0, 3);
+            const worst = worstGenerations.slice(0, 3);
+            document.getElementById('bestGenerations').textContent = `Best Generations: ${best.join(', ')}`;
+            document.getElementById('worstGenerations').textContent = `Worst Generations: ${worst.join(', ')}`;
         }
     }
 
@@ -130,17 +149,29 @@
     document.getElementById('clearButton').addEventListener('click', () => {
         grid = createGrid();
         generation = 0;
+        liveCells = 0;
+        prevGrids = [];
+        bestGenerations = [];
+        worstGenerations = [];
         render();
         document.getElementById('generationCounter').textContent = `Generation: ${generation}`;
         document.getElementById('liveCellsCounter').textContent = `Live Cells: ${liveCells}`;
+        document.getElementById('bestGenerations').textContent = 'Best Generations: ';
+        document.getElementById('worstGenerations').textContent = 'Worst Generations: ';
     });
 
     document.getElementById('randomizeButton').addEventListener('click', () => {
         grid = createRandomGrid();
         generation = 0;
+        liveCells = 0;
+        prevGrids = [];
+        bestGenerations = [];
+        worstGenerations = [];
         render();
         document.getElementById('generationCounter').textContent = `Generation: ${generation}`;
         document.getElementById('liveCellsCounter').textContent = `Live Cells: ${liveCells}`;
+        document.getElementById('bestGenerations').textContent = 'Best Generations: ';
+        document.getElementById('worstGenerations').textContent = 'Worst Generations: ';
     });
 
     function createRandomGrid() {
