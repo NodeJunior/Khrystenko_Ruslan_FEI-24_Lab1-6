@@ -14,7 +14,9 @@
 <canvas id="gameCanvas" width="400" height="400"></canvas>
 <button id="startButton">Start Game</button>
 <button id="clearButton">Clear Field</button>
+<button id="randomizeButton">Fill By Random</button>
 <p id="generationCounter">Generation: 0</p>
+<p id="liveCellsCounter">Live Cells: 0</p>
 
 <script>
     const canvas = document.getElementById('gameCanvas');
@@ -24,7 +26,9 @@
     const cols = canvas.width / resolution;
     let isGameRunning = false;
     let generation = 0;
+    let liveCells = 0;
     let prevGrids = [];
+    let isMouseDown = false;
 
     let grid = createGrid();
 
@@ -34,13 +38,16 @@
     }
 
     function update() {
+        // Створення нового поля 
         generation++;
+        liveCells = 0;
         const nextGen = createGrid();
 
         for (let col = 0; col < cols; col++) {
             for (let row = 0; row < rows; row++) {
                 const cell = grid[col][row];
                 let neighbors = 0;
+                // Обчислення сусідів клітинки
                 for (let i = -1; i < 2; i++) {
                     for (let j = -1; j < 2; j++) {
                         const x = (col + i + cols) % cols;
@@ -50,16 +57,22 @@
                 }
                 neighbors -= cell;
 
-                if (cell === 1 && (neighbors < 2 || neighbors > 3)) {
-                    nextGen[col][row] = 0;
-                } else if (cell === 0 && neighbors === 3) {
-                    nextGen[col][row] = 1;
+                // Правила життя та смерті гри "Життя"
+                if (cell === 1 && (neighbors < 2 || neighbors > 3)) { //Якщо в клітинки менше 2-ох або більше 4 клітинок
+                    nextGen[col][row] = 0;                            //То вона "відмирає" від самотності або перенаселення 
+                } else if (cell === 0 && neighbors === 3) { // Якщо жива (мертва) клітинка має три сусіди            
+                    nextGen[col][row] = 1;                  // Вона лишається жити (оживає)
                 } else {
                     nextGen[col][row] = cell;
+                }
+
+                if (nextGen[col][row] === 1) {
+                    liveCells++;
                 }
             }
         }
 
+        // Перевірка на циклічність гри
         if (prevGrids.some(prevGrid => JSON.stringify(prevGrid) === JSON.stringify(nextGen))) {
             isGameRunning = false;
             document.getElementById('startButton').textContent = 'Start Game';
@@ -67,7 +80,8 @@
             prevGrids.push(JSON.parse(JSON.stringify(nextGen)));
         }
 
-        grid = nextGen;
+        // Оновлення сітки
+        grid = nextGen; 
     }
 
     function render() {
@@ -89,6 +103,7 @@
         update();
         render();
         document.getElementById('generationCounter').textContent = `Generation: ${generation}`;
+        document.getElementById('liveCellsCounter').textContent = `Live Cells: ${liveCells}`;
         if (isGameRunning) {
             requestAnimationFrame(runGame);
         }
@@ -117,7 +132,52 @@
         generation = 0;
         render();
         document.getElementById('generationCounter').textContent = `Generation: ${generation}`;
+        document.getElementById('liveCellsCounter').textContent = `Live Cells: ${liveCells}`;
     });
+
+    document.getElementById('randomizeButton').addEventListener('click', () => {
+        grid = createRandomGrid();
+        generation = 0;
+        render();
+        document.getElementById('generationCounter').textContent = `Generation: ${generation}`;
+        document.getElementById('liveCellsCounter').textContent = `Live Cells: ${liveCells}`;
+    });
+
+    function createRandomGrid() {
+        return new Array(cols).fill(null)
+            .map(() => new Array(rows).fill(null)
+                .map(() => Math.random() > 0.5 ? 1 : 0));
+    }
+
+    canvas.addEventListener('mousedown', () => {
+        isMouseDown = true;
+    });
+
+    canvas.addEventListener('mouseup', () => {
+        isMouseDown = false;
+    });
+
+    canvas.addEventListener('mousemove', (event) => {
+        if (isMouseDown) {
+            const x = Math.floor(event.offsetX / resolution);
+            const y = Math.floor(event.offsetY / resolution);
+            grid[x][y] = grid[x][y] ? 0 : 1;
+            render();
+        }
+    });
+
+    function countLiveCells(grid) {
+        let count = 0;
+        for (let col = 0; col < cols; col++) {
+            for (let row = 0; row < rows; row++) {
+                if (grid[col][row] === 1) {
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+
 </script>
 </body>
 </html>
