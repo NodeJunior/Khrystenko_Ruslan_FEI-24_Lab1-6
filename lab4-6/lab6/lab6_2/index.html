@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Conway's Game of Life</title>
+<style>
+    canvas {
+        border: 1px solid #000;
+    }
+</style>
+</head>
+<body>
+<canvas id="gameCanvas" width="400" height="400"></canvas>
+<button id="startButton">Start Game</button>
+<button id="clearButton">Clear Field</button>
+<p id="generationCounter">Generation: 0</p>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const resolution = 10;
+    const rows = canvas.height / resolution;
+    const cols = canvas.width / resolution;
+    let isGameRunning = false;
+    let generation = 0;
+    let prevGrids = [];
+
+    let grid = createGrid();
+
+    function createGrid() {
+        return new Array(cols).fill(null)
+            .map(() => new Array(rows).fill(0));
+    }
+
+    function update() {
+        generation++;
+        const nextGen = createGrid();
+
+        for (let col = 0; col < cols; col++) {
+            for (let row = 0; row < rows; row++) {
+                const cell = grid[col][row];
+                let neighbors = 0;
+                for (let i = -1; i < 2; i++) {
+                    for (let j = -1; j < 2; j++) {
+                        const x = (col + i + cols) % cols;
+                        const y = (row + j + rows) % rows;
+                        neighbors += grid[x][y];
+                    }
+                }
+                neighbors -= cell;
+
+                if (cell === 1 && (neighbors < 2 || neighbors > 3)) {
+                    nextGen[col][row] = 0;
+                } else if (cell === 0 && neighbors === 3) {
+                    nextGen[col][row] = 1;
+                } else {
+                    nextGen[col][row] = cell;
+                }
+            }
+        }
+
+        if (prevGrids.some(prevGrid => JSON.stringify(prevGrid) === JSON.stringify(nextGen))) {
+            isGameRunning = false;
+            document.getElementById('startButton').textContent = 'Start Game';
+        } else {
+            prevGrids.push(JSON.parse(JSON.stringify(nextGen)));
+        }
+
+        grid = nextGen;
+    }
+
+    function render() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        for (let col = 0; col < cols; col++) {
+            for (let row = 0; row < rows; row++) {
+                const cell = grid[col][row];
+                ctx.beginPath();
+                ctx.rect(col * resolution, row * resolution, resolution, resolution);
+                ctx.fillStyle = cell ? 'black' : 'white';
+                ctx.fill();
+                ctx.stroke();
+            }
+        }
+    }
+
+    function runGame() {
+        update();
+        render();
+        document.getElementById('generationCounter').textContent = `Generation: ${generation}`;
+        if (isGameRunning) {
+            requestAnimationFrame(runGame);
+        }
+    }
+
+    canvas.addEventListener('click', (event) => {
+        const x = Math.floor(event.offsetX / resolution);
+        const y = Math.floor(event.offsetY / resolution);
+        grid[x][y] = grid[x][y] ? 0 : 1;
+        render();
+    });
+
+    document.getElementById('startButton').addEventListener('click', () => {
+        isGameRunning = !isGameRunning;
+        if (isGameRunning) {
+            generation = 0;
+            runGame();
+            document.getElementById('startButton').textContent = 'Stop Game';
+        } else {
+            document.getElementById('startButton').textContent = 'Start Game';
+        }
+    });
+
+    document.getElementById('clearButton').addEventListener('click', () => {
+        grid = createGrid();
+        generation = 0;
+        render();
+        document.getElementById('generationCounter').textContent = `Generation: ${generation}`;
+    });
+</script>
+</body>
+</html>

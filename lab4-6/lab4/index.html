@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Опитування</title>
+  <style>
+    label {
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    .activities {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<form id="surveyForm">
+  <label for="q1">1. Яке ваше ім'я?</label>
+  <input type="text" id="q1" name="name" required>
+
+  <label for="q2">2. Скільки вам років?</label>
+  <select id="q2" name="age" required>
+    </select>
+
+  <label for="q3">3. Який ваш улюблений колір?</label>
+  <input type="color" id="q3" name="color" required>
+
+  <label for="q4">4. Чим ви захоплюєтеся?</label>
+  <div class="activities">
+    <div>
+      <input type="checkbox" id="q4_art" name="activities" value="art">
+      <label for="q4_art">Малювання</label>
+      <input type="checkbox" id="q4_music" name="activities" value="music">
+      <label for="q4_music">Музика</label>
+      <input type="checkbox" id="q4_game" name="activities" value="gaming">
+      <label for="q4_game">Комп'ютерні ігри</label>
+      <input type="checkbox" id="q4_sport" name="activities" value="sport">
+      <label for="q4_sport">Спорт та фізичні активності</label>
+    </div>
+    <div>
+      <input type="checkbox" id="q4_photo" name="activities" value="photograph">
+      <label for="q4_photo">Фотографування</label>
+      <input type="checkbox" id="q4_garden" name="activities" value="gardening">
+      <label for="q4_garden">Садівництво</label>
+      <input type="checkbox" id="q4_literature" name="activities" value="literature">
+      <label for="q4_literature">Література</label>
+      <input type="checkbox" id="q4_dance" name="activities" value="dancing">
+      <label for="q4_dance">Танці</label>
+    </div>
+  </div>
+
+  <label for="q5">5. Чи є у вас хоббі, якого не було в цьому списку?</label>
+  <input type="radio" id="q5_yes" name="hobbylist" value="yes" required>
+  <label for="q5_yes">Так</label>
+  <input type="radio" id="q5_no" name="hobbylist" value="no" required>
+  <label for="q5_no">Ні</label>
+
+  <label for="q6">6. Напишіть слова, якими би могли себе охарактеризувати.</label>
+  <textarea id="q6" name="character" rows="4" required></textarea>
+
+  <label for="q7">7. Як ви оцінюєте свій рівень щасливості?</label>
+  <input type="range" id="q7" name="happinessLevel" min="1" max="10" required>
+
+  <label for="q8">8. Що б ви хотіли зробити з нижче перечисленого?</label>
+  <datalist id="planList">
+    <option value="Вивчити нову мову">
+    <option value="Подорожувати в іншу країну (або містами своєї країни)">
+    <option value="Розпочати власний бізнес">
+    <option value="Навчитися грати на одному з музичних інструментів">
+    <option value="Освоїти нове хоббі">    
+  </datalist>
+  <input list="planList" id="q8" name="plan" required>
+
+  <label for="q9">9. Введіть дату проходження тесту.</label>
+  <input type="date" id="q9" name="testdate" required>
+
+  <label for="q10">10. І наостанок введіть час закінчення тесту.</label>
+  <input type="time" id="q10" name="testtime" required>
+
+  <button type="button" onclick="submitForm()">Відправити</button>
+</form>
+
+<h2>Фільтри та результати:</h2>
+<button onclick="showAllResults()">Показати всі результати</button>
+<button onclick="filterByAgeRange(18, 30)">Фільтрувати за віком 18-30</button>
+<button onclick="filterByActivity('art')">Фільтрувати за інтересом в малюванні</button>
+<button onclick="sortByDate()">Сортувати за датою проходження тесту</button>
+<button onclick="clearSurveyResults()">Очистити результати</button>
+
+<div id="filteredResults">
+</div>
+
+<script>
+  const ageSelect = document.getElementById('q2');
+  for (let i = 18; i <= 100; i++) {
+    const option = document.createElement('option');
+    option.value = i;
+    option.text = i;
+    ageSelect.add(option);
+  }
+
+  function submitForm() {
+    let storedResults = JSON.parse(localStorage.getItem('surveyResults')) || [];
+
+    const formData = new FormData(document.getElementById('surveyForm'));
+    const formObject = {};
+    formData.forEach((value, key) => {
+      if (formObject[key]) {
+        if (!Array.isArray(formObject[key])) {
+          formObject[key] = [formObject[key]];
+        }
+        formObject[key].push(value);
+      } else {
+        formObject[key] = value;
+      }
+    });
+
+    if (!Array.isArray(storedResults)) {
+      storedResults = [];
+    } 
+
+    storedResults.push(formObject);
+
+    localStorage.setItem('surveyResults', JSON.stringify(storedResults));
+
+    document.getElementById('surveyForm').reset();
+
+    alert('Дякуємо за участь в опитуванні!');
+  }
+
+  function getSurveyResults() {
+    const storedResults = localStorage.getItem('surveyResults');
+     if (!storedResults) {
+      return [];
+    }
+    try {
+      const parsedResults = JSON.parse(storedResults);
+      return Array.isArray(parsedResults) ? parsedResults : [parsedResults];
+    } catch (error) {
+      console.error('Помилка розбору даних опитування з LocalStorage:', error);
+      return [];
+    }
+  }
+
+  function showAllResults() {
+    const surveyResults = getSurveyResults();
+    displayResults(surveyResults);
+  }
+
+  function filterByAgeRange(minAge, maxAge) {
+    const filteredResults = filterByAge(minAge, maxAge);
+    displayResults(filteredResults);
+  }
+
+  function filterByActivity(activities) {
+    const filteredResults = filterByActivityType('art');
+    displayResults(filteredResults);
+  }
+
+  function sortByDate() {
+    const sortedResults = sortResultsByDate();
+    displayResults(sortedResults);
+  }
+
+  function displayResults(results) {
+    const surveyResultsDiv = document.getElementById('filteredResults');
+    surveyResultsDiv.innerHTML = '';
+
+    if (results.length === 0) {
+      surveyResultsDiv.textContent = 'Результати не знайдені.';
+      return;
+    }
+
+    const ul = document.createElement('ul');
+    results.forEach(result => {
+      const li = document.createElement('li');
+      li.textContent = JSON.stringify(result);
+      ul.appendChild(li);
+    });
+    surveyResultsDiv.appendChild(ul);
+  }
+
+  function filterByAge(minAge, maxAge) {
+    const results = getSurveyResults();
+    return results.filter(result => result.age >= minAge && result.age <= maxAge);
+  }
+
+  function filterByActivityType(activity) {
+    const results = getSurveyResults();
+    return results.filter(result => result.activities && result.activities.includes(activity));
+  }
+
+  function sortResultsByDate() {
+    const results = getSurveyResults();
+    return results.sort((a, b) => new Date(a.testdate + ' ' + a.testtime) - new Date(b.testdate + ' ' + b.testtime));
+  }
+
+  function clearSurveyResults() {
+    localStorage.removeItem('surveyResults');
+  }
+
+</script>
+
+</body>
+</html>
