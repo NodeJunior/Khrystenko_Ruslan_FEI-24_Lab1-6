@@ -5,20 +5,79 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Conway's Game of Life</title>
 <style>
+    @font-face {
+        font-family: PixelifySans;
+        src: url(PixelifySans-VariableFont_wght.ttf);
+    }
+    body {
+        background-image: url(background.jpg);
+        color: #fff;
+        font-family: PixelifySans, sans-serif;
+        display: flex;
+        justify-content: center; 
+        align-items: center; 
+        height: 100vh; 
+        margin: 0;
+    }
+
+    #gameContainer {
+        background-color: #0c0727;
+        text-align: center;
+        height: 100%;
+        width: 80%; 
+        max-width: 800px; 
+        padding: 20px;
+        margin-top: 20px;
+    }
+
     canvas {
+        background-color: #000;
         border: 1px solid #000;
+        text-align: center;
+    }
+
+    button {
+        background-color: #3836cf;
+        font-family: PixelifySans, sans-serif;
+        text-align: center;
+        color: #fff;
+        border: none;
+        padding: 5px 10px;
+        margin: 5px;
+        margin-top: 10px;
+        cursor: pointer;
+    }
+
+    #buttons {
+        text-align: center;
+    }
+
+    button:hover {
+        background-color: #555;
+    }
+
+    #statistics {
+        background-color: #000;
+        margin: 5px;
     }
 </style>
 </head>
 <body>
-<canvas id="gameCanvas" width="400" height="400"></canvas>
-<button id="startButton">Start Game</button>
-<button id="clearButton">Clear Field</button>
-<button id="randomizeButton">Fill By Random</button>
-<p id="generationCounter">Generation: 0</p>
-<p id="liveCellsCounter">Live Cells: 0</p>
-<p id="bestGenerations">Best Generations: </p>
-<p id="worstGenerations">Worst Generations: </p>
+<div id="gameContainer">
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <div id="buttons">
+        <button id="startButton">Start Game</button>
+        <button id="clearButton">Clear Field</button>
+        <button id="randomizeButton">Fill By Random</button>
+    </div>
+    <div id="statistics">
+        <p id="generationCounter">Generation: 0</p>
+        <p id="liveCellsCounter">Live Cells: 0</p>
+        <p id="bestGenerations">Best Generations: </p>
+        <p id="worstGenerations">Worst Generations: </p>
+    </div>
+</div>
+
 
 <script>
     const canvas = document.getElementById('gameCanvas');
@@ -180,8 +239,9 @@
                 .map(() => Math.random() > 0.5 ? 1 : 0));
     }
 
-    canvas.addEventListener('mousedown', () => {
+    canvas.addEventListener('mousedown', (event) => {
         isMouseDown = true;
+        fillCell(event); // Заповнити першу клітинку при початковому натисканні кнопки миші
     });
 
     canvas.addEventListener('mouseup', () => {
@@ -190,12 +250,16 @@
 
     canvas.addEventListener('mousemove', (event) => {
         if (isMouseDown) {
-            const x = Math.floor(event.offsetX / resolution);
-            const y = Math.floor(event.offsetY / resolution);
-            grid[x][y] = grid[x][y] ? 0 : 1;
-            render();
+            fillCell(event); // Заповнювати клітинки під час руху миші
         }
     });
+
+    function fillCell(event) {
+        const x = Math.floor(event.offsetX / resolution);
+        const y = Math.floor(event.offsetY / resolution);
+        grid[x][y] = grid[x][y] ? 0 : 1;
+        render();
+    }
 
     function countLiveCells(grid) {
         let count = 0;
